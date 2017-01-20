@@ -11,7 +11,6 @@ HEADERS = {
     'Cookie': 'JSESSIONID=04CD2BDFC1374417F24A7C8E0663B407',
     'Accept-Language': 'zh-cn',
     'Accept-Encoding': 'gzip, deflate',
-    'Content-Length': '7',
     'Content-Type': r'application/x-www-form-urlencoded'
 }
 
@@ -21,16 +20,34 @@ def post_data_to_server(url_to_post, content_to_post):
     """
     data = urllib.parse.urlencode(content_to_post)
     binary_data = data.encode(encoding='utf_8')
+    HEADERS['Content-Length'] = str(len(data))
     req = urllib.request.Request(url_to_post, binary_data, HEADERS)
     response = urllib.request.urlopen(req)
     the_page = response.read()
     response_data = json.loads(the_page.decode("utf8"))
     return response_data
 
+def bus_query(path_id_to_query):
+    """
+    打印公交车的基本信息，如发车时间，末班车时间，间隔时间
+    """
+    url = r"http://61.177.44.242:8080/BusSysWebService/common/busQuery"
+    content_to_post = {'runPathId': path_id_to_query}
+
+    data = post_data_to_server(url, content_to_post)
+    items = data['result']
+    print(items['runPathName']+"    发车间隔:"+items['busInterval']+"分钟")
+    print("首发站："+items['startStation']+"    终点站："+items['endStation'])
+    print("首发时间："+items['startTime']+"    末班时间："+items['endTime'])
+    if items['runFlag'] == '1':
+        print("正在运营中")
+    else:
+        print("休息中")
+
 
 def search_bus(bus_to_search):
     """
-    搜索公交车，打印搜索列表
+    搜索公交车，打印搜索列表，返回Path_ID，类型为str
     """
     url = r"http://61.177.44.242:8080/BusSysWebService/bus/allStationOfRPName"
     content_to_post = {'name': bus_to_search}
@@ -47,3 +64,4 @@ def search_bus(bus_to_search):
 
 BUSNO = input("请输入您想查询的公交线路：")
 path_id = search_bus(BUSNO)
+bus_query(path_id)
