@@ -25,6 +25,9 @@ def post_data_to_server(url_to_post, content_to_post):
     response = urllib.request.urlopen(req)
     the_page = response.read()
     response_data = json.loads(the_page.decode("utf8"))
+    if response_data['status'] != 'SUCCESS':
+        print("\033[31m获取信息失败！\033[0m")
+        exit()
     return response_data
 
 def search_bus(bus_to_search):
