@@ -25,25 +25,7 @@ def post_data_to_server(url_to_post, content_to_post):
     response = urllib.request.urlopen(req)
     the_page = response.read()
     response_data = json.loads(the_page.decode("utf8"))
-    return response_data
-
-def bus_query(path_id_to_query):
-    """
-    打印公交车的基本信息，如发车时间，末班车时间，间隔时间
-    """
-    url = r"http://61.177.44.242:8080/BusSysWebService/common/busQuery"
-    content_to_post = {'runPathId': path_id_to_query}
-
-    data = post_data_to_server(url, content_to_post)
-    items = data['result']
-    print(items['runPathName']+"    发车间隔:"+items['busInterval']+"分钟")
-    print("首发站："+items['startStation']+"    终点站："+items['endStation'])
-    print("首发时间："+items['startTime']+"    末班时间："+items['endTime'])
-    if items['runFlag'] == '1':
-        print("正在运营中")
-    else:
-        print("休息中")
-
+    return response_data 
 
 def search_bus(bus_to_search):
     """
@@ -55,13 +37,56 @@ def search_bus(bus_to_search):
     lines = data['result']['lines']
     cnt = 1
     for items in lines:
-        print(str(cnt)+'.  '+items['runPathName'])
+        print('\033[32m'+str(cnt)+'.  '+items['runPathName']+'\033[0m')
         print("    首发站："+items['startName'])
         print("    终点站："+items['endName'])
         cnt += 1
     chosen_item = input("请输入您要查询的编号：")
     return lines[int(chosen_item)-1]['runPathId']
 
+def bus_query(path_id_to_query):
+    """
+    打印公交车的基本信息，如发车时间，末班车时间，间隔时间
+    """
+    url = r"http://61.177.44.242:8080/BusSysWebService/common/busQuery"
+    content_to_post = {'runPathId': path_id_to_query}
+    data = post_data_to_server(url, content_to_post)
+    items = data['result']
+    print('\033[32m'+items['runPathName']+'\033[0m'+"    发车间隔:"+items['busInterval']+"分钟")
+    print("首发站："+items['startStation']+"    终点站："+items['endStation'])
+    print("首发时间："+items['startTime']+"    末班时间："+items['endTime'])
+    # if items['runFlag'] == '1':
+    #     print("正在运营中")
+    # else:
+    #     print("休息中")
+
+def get_bus_line(path_id_to_query):
+    url = r"http://61.177.44.242:8080/BusSysWebService/bus/searchSSR"
+    content_to_post = {'rpId': path_id_to_query}
+    data = post_data_to_server(url, content_to_post)
+    shangxing = data['result']['shangxing']
+    xiaxing = data['result']['xiaxing']
+    
+    flag = False
+    print('\033[32m-----上行路线-----\033[0m')
+    for items in shangxing:
+        if flag:
+            print('---', end='')
+        flag = True
+        print(items['busStationName'], end='')
+    print()
+
+    flag = False
+    print('\033[32m-----下行路线-----\033[0m')
+    for items in xiaxing:
+        if flag:
+            print('---', end='')
+        flag = True
+        print(items['busStationName'], end='')
+    print()
+    
+
 BUSNO = input("请输入您想查询的公交线路：")
 path_id = search_bus(BUSNO)
 bus_query(path_id)
+get_bus_line(path_id)
